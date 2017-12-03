@@ -9,6 +9,8 @@ import librosa.display
 import numpy as np
 import pandas as pd
 import _pickle as pickle
+from matplotlib import pyplot as plt
+from sklearn.model_selection import learning_curve
 
 
 def extract_feature(file_name):
@@ -53,6 +55,32 @@ exported_pipeline = ExtraTreesClassifier(bootstrap=True, criterion="entropy", ma
                                          min_samples_split=8, n_estimators=100)
 
 exported_pipeline.fit(tr_features, tr_labels)
+
+train_sizes, train_scores, test_scores = learning_curve(exported_pipeline, tr_features, tr_labels, n_jobs=-1, cv=8,
+                                                        train_sizes=np.linspace(.1, 1.0, 5), verbose=1)
+train_scores_mean = np.mean(train_scores, axis=1)
+train_scores_std = np.std(train_scores, axis=1)
+test_scores_mean = np.mean(test_scores, axis=1)
+test_scores_std = np.std(test_scores, axis=1)
+
+plt.figure()
+plt.title("Genetic Exported Pipeline Model")
+plt.legend(loc="best")
+plt.xlabel("Training examples")
+plt.ylabel("Score")
+plt.gca().invert_yaxis()
+
+plt.grid()
+
+plt.fill_between(train_sizes, train_scores_mean - train_scores_std, train_scores_mean + train_scores_std, alpha=0.1,
+                 color="r")
+plt.fill_between(train_sizes, test_scores_mean - test_scores_std, test_scores_mean + test_scores_std, alpha=0.1,
+                 color="g")
+line_up = plt.plot(train_sizes, train_scores_mean, 'o-', color="r", label="Training score")
+line_down = plt.plot(train_sizes, test_scores_mean, 'o-', color="g", label="Cross-validation score")
+plt.ylim(-.1, 1.1)
+plt.legend(loc="lower right")
+plt.show()
 
 filename = 'genetic_generated_pipeline.sav'
 
